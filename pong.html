@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>PONG, PONG, PONG, PONG, SONG</title> 
+
+<!-- for CreateJS and ZIMjs http://zimjs.com - free to modify - Dan Zen 2015 -->
+<!-- see http://zimjs.com/templates for more templates and meta tags -->
+
+<script>var zon = true; // true for comments from zim code</script>
+<script src="http://d309knd7es5f10.cloudfront.net/zim_1.4.4_min.js"></script><!-- take off _min to see code -->
+<script src="http://code.createjs.com/createjs-2015.05.21.min.js"></script> 
+<!-- or can go to zimjs.com and createjs.com for individual modules -->
+
+<style>
+	body {margin:0px; padding:0px; background-color:#000;}
+	#myCanvas {position:absolute; background-color:white;}
+</style>
+
+<script>
+
+// SCALING OPTIONS
+// "none"		sets canvas and stage to dimensions and does not scale if window changes
+// "fit"		sets canvas and stage to dimensions and scales to fit inside window size
+// "outside"	sets canvas and stage to dimensions and scales to fit outside window size
+// "full"		sets canvas and stage to window size (canvas is actually set to screen size)
+				
+			
+				
+
+
+var scaling = "fit"; // fit scales to fit the browser window while keeping the aspect ratio
+var width = 960;
+var height = 640;
+var frame = new zim.Frame(scaling, width, height); 
+frame.on("ready", function() {	
+	zog("ready from ZIM Frame");
+	
+	var stage = frame.stage;
+	var stageW = frame.width;
+	var stageH = frame.height;
+
+	// put your code here (you can delete this code)
+	
+	//instantiate variables for keeping score and which direction ball should go
+	var score1 = 0;
+	var score2 = 0;
+	var goRight = true;
+	var goDown = false;
+	var ballSpeed = 10;
+	var player2Speed = 5;
+	var edgeOfScreen = 20;
+	var playerWidth = 60;
+	var playerHeight = 120;
+	var playerDistanceFromEdgeOfScreen = 50;
+	var player1Speed = 50;
+	var fps = 30;
+	
+	//Create labels to display the score	
+	player1Score = new createjs.Text(score1, "bold 18px Arial", "#000");
+		stage.addChild(player1Score);
+		player1Score.x = 10;
+		player1Score.y = 20;
+		
+	player2Score = new createjs.Text(score2, "bold 18px Arial", "#000");
+		stage.addChild(player2Score);
+		player2Score.x = stageW - 20;
+		player2Score.y = 20;
+		
+	//create two rectangles for the players
+	var player1 = new zim.Rectangle(playerWidth,playerHeight); //60 wide by 120 high
+		zim.centerReg(player1); 
+		player1.x = playerDistanceFromEdgeOfScreen; //on the left side of the screen
+		player1.y = stageH/2; //in the middle
+		stage.addChild(player1);
+
+	var player2 = new zim.Rectangle(playerWidth,playerHeight); //create player2
+		zim.centerReg(player2);
+		player2.x = stageW - playerDistanceFromEdgeOfScreen;
+		player2.y = stageH/2;	
+		stage.addChild(player2)
+
+	//create the ball
+	var ball = new zim.Circle(20);
+		ball.x = stageW/2; //initiate it in middle of screen
+		ball.y = stageH/2;
+		stage.addChild(ball);
+		
+	//Whenever the mouse is moving, do the following	
+	stage.addEventListener("stagemousemove", function(){
+		zim.move(player1, edgeOfScreen, stage.mouseY, player1Speed) //follow the mouse's y position
+		});
+		
+	
+
+	createjs.Ticker.on("tick", tick); //create a ticker that calls the tick method with FPS of 30
+	createjs.Ticker.setFPS(fps);
+
+	function tick(event){ //method called at every tick of the ticker
+		
+			
+		if ( zim.hitTestCircle(player1, ball, 20) ) { //if the ball hits player1, go right afterwards (player 1 is on left of screen)
+			goRight = true;                           //20 points around ball to do hit test with     
+		}	
+		
+		if ( zim.hitTestCircle(player2, ball, 20) ) { //if ball hits player 2, go left
+			goRight = false;
+		}	
+		
+		
+		if(goRight == true){  //if the ball is travelling right
+			if (goDown == false){  //and ball is going update
+				ball.x = ball.x + ballSpeed;  //move ballSpeed to the right and 10px upwards at each tick
+				ball.y = ball.y - ballSpeed;
+			}else if (goDown == true){ //or if the ball is going down
+				ball.x = ball.x + ballSpeed; //move ballSpeed to the right and 10 px downwards at each tick
+				ball.y = ball.y + ballSpeed;
+			}
+
+		} else if (goRight == false) {   //same but for going left
+			if (goDown == false){
+				ball.x = ball.x - ballSpeed;
+				ball.y = ball.y - ballSpeed;
+			}else if (goDown == true){
+				ball.x = ball.x - ballSpeed;
+				ball.y = ball.y + ballSpeed;
+			}
+		
+		}
+		
+		if (ball.y < edgeOfScreen){	//if the ball reaches the top edge of the screen
+			goDown = true;  //ball will now go down
+		} else if (ball.y > stageH - edgeOfScreen){ //if the ball reaches the bottom edge of the screen
+			goDown = false; //ball will go update
+		}
+
+		if (ball.x > stageW){ //if ball goes off stage on the right
+			score1++
+			player1Score.text = score1; //player 1's score increases
+			//ballSpeed = (ballSpeed/15) + ballSpeed; //increase ball speed with each new round
+			goRight = false; //go left next time ball is placed on screen
+
+			ball.x = player2.x;//place ball where losing player is
+			ball.y = player2.y;
+			}
+		if (ball.x < 0){  //if ball goes off the stage on the left
+			score2++;
+			player2Score.text = score2; //player 2's score increases
+			//ballSpeed = (ballSpeed/15) + ballSpeed; //increase ball speed
+			goRight = true;				//ball travels right next time it is placed on screen
+			
+			ball.x = player1.x;
+			ball.y = player1.y;
+			
+			}
+		
+	
+		if (goDown == true){  //if the ball is going down
+			player2.y = player2.y + player2Speed; //player 2 moves downwards at a pace of 5px per tick
+		}else if (goDown == false){    //otherwise move up at a pace of 5px per tick
+			player2.y = player2.y - player2Speed;
+		}
+		
+		stage.update(event); //update stage
+	}
+					
+
+	
+	
+}); // end of ready
+</script>
+</head>
+
+<body>
+<!-- canvas with id="myCanvas" is made by zim Frame -->
+</body>
+</html>
